@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors'); // ✅ Import cors
 const customerRouter = require('./Routes/customer');
 const CommodityPricingSku = require('./Routes/comodityPrice');
 const orderRoute = require("./Routes/order")
@@ -14,6 +15,9 @@ mongoose.connect('mongodb+srv://himanshuakodiya19:RoiCZhadQ4FKGDxv@cluster0.lzon
   useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+  // ✅ Use CORS middleware (allow all origins by default)
+app.use(cors());
 
 app.use(express.json());
 
