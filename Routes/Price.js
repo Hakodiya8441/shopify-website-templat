@@ -15,7 +15,7 @@ function calculateInterestCredit(days) {
   return days * rate;
 }
 
-// Normalize keys & numeric conversion
+// Normalize order keys and values
 function cleanOrderObject(rawObj) {
   const cleaned = {};
   for (const key in rawObj) {
@@ -34,7 +34,6 @@ router.get("/pricegenerate", async (req, res) => {
   console.log("Incoming query:", query);
 
   try {
-    
     let { commodity_name, sku_name, contact, quantity, typeOfPacking } = query;
 
     if (!contact || !quantity || !typeOfPacking || !commodity_name || !sku_name) {
@@ -68,16 +67,18 @@ router.get("/pricegenerate", async (req, res) => {
     const totalOrders = orders.length;
     const totalTransactionPrice = orders.reduce((sum, order) => sum + (parseFloat(order.Total_Price) || 0), 0);
     const totalVolume = orders.reduce((sum, order) => sum + (parseFloat(order.Total_Kg) || 0), 0);
-    const averageQuantity = totalVolume / totalOrders;
     const AOV = totalTransactionPrice / totalOrders;
+    const averageQuantity = totalVolume / totalOrders;
 
     const commoditySkuDetails = [];
 
     for (let i = 0; i < commodities.length; i++) {
-      const commodity = commodities[i].trim();
-      const sku = skus[i].trim();
-      const qty = quantities[i].trim();
-      const packing = packings[i].trim();
+      const commodity = commodities[i]?.trim();
+      const sku = skus[i]?.trim();
+      const qty = quantities[i]?.trim();
+      const packing = packings[i]?.trim();
+
+      console.log(`🔍 Checking for: ${commodity} - ${sku} - ${packing}`);
 
       const filteredOrders = orders.filter(order =>
         order.Commodity?.toLowerCase() === commodity.toLowerCase() &&
@@ -87,7 +88,10 @@ router.get("/pricegenerate", async (req, res) => {
         orders.find(order => order.Commodity?.toLowerCase() === commodity.toLowerCase()) ||
         orders[0];
 
-      if (!orderToUse) continue;
+      if (!orderToUse) {
+        console.warn(`⚠️ No matching order for ${commodity} - ${sku}`);
+        continue;
+      }
 
       const pricingData = await CommoditySkuPricing.findOne({
         commodity_name: new RegExp(`^${commodity}$`, "i"),
@@ -95,20 +99,19 @@ router.get("/pricegenerate", async (req, res) => {
         typeOfPacking: new RegExp(`^${packing}$`, "i"),
       });
 
-      if (!pricingData) continue;
+      if (!pricingData) {
+        console.warn(`⚠️ No pricing data found for ${commodity}, ${sku}, ${packing}`);
+        continue;
+      }
 
-      const maxPrice = pricingData.max_bag_price;
-      const minPrice = pricingData.min_bag_price;
+      const maxPrice = parseFloat(pricingData.max_bag_price) || 0;
+      const minPrice = parseFloat(pricingData.min_bag_price) || 0;
 
-      const relevantOrders = filteredOrders.length ? filteredOrders : [orderToUse];
-
-      // const totalInterestCredit = relevantOrders.reduce((sum, order) =>
-      //   sum + (parseFloat(order.Credit_intrest) || 0), 0);
-      const totalInterestCredit = 2;
+      const totalInterestCredit = 2; // Static for now
       const totalInterest = calculateInterestCredit(totalInterestCredit);
-
-      const volumeDiscount = (maxPrice - minPrice) / (parseFloat(orderToUse.Total_Kg) || 1);
-      const fx = maxPrice + totalInterest - volumeDiscount ;
+      const totalKg = parseFloat(orderToUse.Total_Kg) || 1;
+      const volumeDiscount = (maxPrice - minPrice) / totalKg;
+      const fx = maxPrice + totalInterest - volumeDiscount;
 
       commoditySkuDetails.push({
         commodity_name: commodity,
@@ -119,7 +122,7 @@ router.get("/pricegenerate", async (req, res) => {
       });
     }
 
-    // Deduplicate by commodity+sku+packing
+    // Deduplicate
     const uniqueMap = new Map();
     for (const item of commoditySkuDetails) {
       const key = `${item.commodity_name.toLowerCase()}-${item.sku_name.toLowerCase()}-${item.type_of_packing.toLowerCase()}`;
@@ -137,7 +140,7 @@ router.get("/pricegenerate", async (req, res) => {
       time: orderTime,
       shop_Name: orders[0]?.Shop_Name || "",
       buyer_Name: orders[0]?.Buyer_Name || "",
-      shop_Number: orders[0]?.Shop_Number || "empty",
+      shop_Number: orders[0]?.Shop_Number || "",
       Market: orders[0]?.Market || "",
       contact_Details: [contact],
       commoditySkuDetails: uniqueCommoditySkuDetails,
@@ -145,35 +148,33 @@ router.get("/pricegenerate", async (req, res) => {
       unloading_Charges: orders[0]?.Unloading_Charges || "",
       unloading: orders[0]?.Unloading || "Cash",
       payment_Terms: "Cash",
-    };  
-    
+    };
 
+    console.log("🧾 Final Payload:", JSON.stringify(payload, null, 2));
 
     try {
       const postResponse = await axios.post(
         `http://localhost:2000/api/add-template`,
-        {pitchedPayload:payload},
-        { headers: { "Content-Type": "application/json",
-         } }
+        { pitchedPayload: payload },
+        { headers: { "Content-Type": "application/json" } }
       );
-      console.log("payload posted:", postResponse.data);
+      console.log("✅ Payload posted:", postResponse.data);
     } catch (postErr) {
       if (postErr.response) {
-        console.error("Posting failed:", postErr.response.status, postErr.response.data);
+        console.error("❌ Posting failed:", postErr.response.status, postErr.response.data);
         return res.status(postErr.response.status).json(postErr.response.data);
       } else {
-        console.error("Posting failed:", postErr.message);
-        return res.status(500).json({ message: "Error posting to /template/add-template" });
+        console.error("❌ Posting error:", postErr.message);
+        return res.status(500).json({ message: "Error posting to /add-template" });
       }
     }
 
     res.json({ payload });
 
   } catch (err) {
-    console.error("Error in /pricing route:", err.message);
+    console.error("❌ Error in /pricegenerate:", err.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 module.exports = router;
-

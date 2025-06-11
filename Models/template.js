@@ -4,10 +4,10 @@ const mongoose = require("mongoose");
 const pitchedPricingSchema = new mongoose.Schema({
     date: { type: String, },
     time: { type: String, },
-    shop_Name: String,
-    buyer_Name: String,
-    shop_Number: String,
-    Market : String,
+    shop_Name: { type: String },
+    buyer_Name: { type: String },
+    shop_Number: { type: String },
+    Market : { type: String },
     contact_Details: [{ type: Number }],
     // Updated field to store all SKU/commodity data
     commoditySkuDetails: [
