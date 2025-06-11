@@ -141,7 +141,7 @@ router.get("/combine", async (req, res) => {
 
     // 🟢 POST to /api/add-template using axios
     try {
-      const postRes = await axios.post("http://localhost:2000/api/add-template", {
+      const postRes = await axios.post("https://shopify-website-template.onrender.com/api/add-template", {
         pitchedPayload: payload,
       });
 
