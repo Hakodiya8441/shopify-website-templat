@@ -4,15 +4,14 @@ const PitchedPricing = require("../Models/template"); // adjust path as needed
 
 router.post("/add-template", async (req, res) => {
   try {
-    const {
-      pitchedPayload
-    } = req.body;
+    const { pitchedPayload } = req.body;
 
     if (!pitchedPayload) {
       return res.status(400).json({ message: "Missing pitchedPayload" });
     }
 
     const {
+      order_id,
       date,
       time,
       shop_Name,
@@ -24,7 +23,8 @@ router.post("/add-template", async (req, res) => {
       commoditySkuDetails,
       transport_Expenses,
       unloading_Charges,
-      unloading
+      unloading,
+      status // ✅ include this!
     } = pitchedPayload;
 
     // Validate required fields
@@ -32,8 +32,8 @@ router.post("/add-template", async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-
     const newPricing = new PitchedPricing({
+      order_id,
       date,
       time,
       shop_Name,
@@ -45,7 +45,8 @@ router.post("/add-template", async (req, res) => {
       commoditySkuDetails,
       transport_Expenses,
       unloading_Charges,
-      unloading
+      unloading,
+      status // ✅ pass it here
     });
 
     const savedPricing = await newPricing.save();

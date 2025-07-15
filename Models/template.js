@@ -2,6 +2,9 @@
 const mongoose = require("mongoose");
 
 const pitchedPricingSchema = new mongoose.Schema({
+  order_id: {
+    type: Number,
+  },
     date: { type: String, },
     time: { type: String, },
     shop_Name: { type: String },
@@ -19,10 +22,15 @@ const pitchedPricingSchema = new mongoose.Schema({
         type_of_packing: String,
       }
     ],
+    status: { type: String, enum: ["pending", "confirmed"], default: "pending" }
+
+  },
+   {
     transport_Expenses: { type: String },
     unloading_Charges: { type: String },
     unloading: { type: String },
     payment_Terms: { type: String },
+    
 
   created_at: {
     type: Date,
