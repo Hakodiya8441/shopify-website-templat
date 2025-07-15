@@ -198,7 +198,7 @@ const CommoditySkuPricing = require("../Models/comodityPrice");
 const moment = require("moment-timezone");
 const router = express.Router();
 const CombineSheet = require("../Models/combinesheet");
-const orderCounter = require("../Models/orderCounter");
+const orderCounter = require("../Models/OrderCounter");
 
 function calculateInterestCredit(days) {
   let rate = 0;
