@@ -413,7 +413,7 @@ const averageKg = totalVolume / totalOrders; // ✅ CORRECT
 
     console.log("✅ Payload to be sent:", payload);
 
-    const postRes = await axios.post("http://localhost:2000/api/add-template", {
+    const postRes = await axios.post("https://shopify-website-template.onrender.com/api/add-template", {
       pitchedPayload: payload,
     });
 
