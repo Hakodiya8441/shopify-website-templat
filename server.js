@@ -8,6 +8,7 @@ const orderRoute = require("./Routes/order")
 const template = require('./Routes/templateRoutes')
 const combine = require('./Routes/combineSheetRoutes')
 const edit = require('./Routes/editRoutes')
+const orderid = require('./Routes/orderid');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/orders', orderRoute); // GET /api/orders/:contact
 app.use('/api', template); // POST /api/add-template
 app.use('/api', combine);//get api/combine data
 app.use('/api', edit); // GET /api/edit?commodity_name=...&sku_name=...&contact=...&quantity=...&typeOfPacking=...&limitedDeals=...&price=...
+app.use('/api', orderid); // GET /api/orderid?order_id=...
 
 const PORT = process.env.PORT || 2000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

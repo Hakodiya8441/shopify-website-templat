@@ -372,17 +372,20 @@ const averageKg = totalVolume / totalOrders; // ✅ CORRECT
 
 
     // ✅ Order ID
-    let orderId = null;
-    let status = "pending";
-    if (generateOrderId) {
-      const orderCounterDoc = await orderCounter.findOneAndUpdate(
-        { key: "order_id" },
-        { $inc: { value: 1 } },
-        { new: true, upsert: true }
-      );
-      orderId = orderCounterDoc.value;
-      status = "confirmed";
-    }
+let orderId = null;
+console.log("Generating Order ID:", orderId);
+let status = "pending";
+if (generateOrderId) {
+  const orderCounterDoc = await orderCounter.findOneAndUpdate(
+    { key: "order_id" },
+    { $inc: { value: 1 } },
+    { new: true, upsert: true }
+  );
+  console.log("Order Counter:", orderCounterDoc);
+  orderId = orderCounterDoc.value;
+  console.log("Generated Order ID:", orderId);
+  status = "confirmed";
+}
 
     const uniqueCommodities = new Set();
     for (const item of commoditySkuDetails) {

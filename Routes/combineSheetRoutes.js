@@ -4,6 +4,8 @@ const CommoditySkuPricing = require("../Models/comodityPrice");
 const moment = require("moment-timezone");
 const router = express.Router();
 const CombineSheet = require("../Models/combinesheet");
+const orderCounter = require("../Models/OrderCounter");
+
 
 function calculateInterestCredit(days) {
   let rate = 0;
@@ -27,6 +29,9 @@ router.get("/combine", async (req, res) => {
     if (!contact || !quantity || !typeOfPacking || !commodity_name || !sku_name) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
+
+    // const generateOrderId = req.query.generateOrderId === "true";
+
 
     const commodities = Array.isArray(commodity_name) ? commodity_name : commodity_name.split(",");
     const skus = Array.isArray(sku_name) ? sku_name : sku_name.split(",");
@@ -114,7 +119,9 @@ router.get("/combine", async (req, res) => {
       console.log(`volumeDiscount`, volumeDiscount);
       console.log(`fx`, fx);
 
+    
       
+
 
       commoditySkuDetails.push({
         commodity_name: commodity,
@@ -133,12 +140,35 @@ router.get("/combine", async (req, res) => {
         uniqueMap.set(key, item);
       }
     }
+
+    const generateOrderId = req.query.generateOrderId === "true";
+    // At the top of your route handler
+let orderId = null;
+
+
+console.log("Generating Order ID:", orderId);
+let status = "pending"; // Default status
+
+
+if (generateOrderId) {
+ const orderCounterDoc = await orderCounter.findOneAndUpdate(
+   { key: "order_id" },
+   { $inc: { value: 1 } },
+   { new: true, upsert: true }
+ );
+ console.log("Order Counter:", orderCounterDoc);
+ orderId = orderCounterDoc.value;
+ console.log("Generated Order ID:", orderId);
+ status = "confirmed";
+}
     const uniqueCommoditySkuDetails = Array.from(uniqueMap.values());
 
     const orderDate = moment().tz("Asia/Kolkata").format("YYYY-MM-DD");
     const orderTime = moment().tz("Asia/Kolkata").format("HH:mm:ss");
 
     const payload = {
+      ...(orderId && { order_id: orderId }), // ✅ safely adds only if orderId exists
+  status,
       date: orderDate,
       time: orderTime,
       shop_Name: orders[0]?.Shop_Name || "",
