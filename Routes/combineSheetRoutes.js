@@ -54,6 +54,7 @@ router.get("/combine", async (req, res) => {
       Contact_Details: { $in: contactNumbers },
       Bag_Packet_Size: { $in: packings },
     });
+    console.log("CombineSheet data fetched:", combineData, "entries found");
 
     if (!combineData.length) {
       console.warn("No full CombineSheet match. Fallback to contact-only.");
@@ -76,7 +77,7 @@ router.get("/combine", async (req, res) => {
       Unloading_Charges: entry.Unloading_Charges || "",
       Unloading: entry.unloading || "Cash",
     }));
-
+console.log("Orders fetched from CombineSheet:", orders);
     const totalOrders = orders.length;
     const totalTransactionPrice = orders.reduce((sum, order) => sum + (parseFloat(order.Price) || 0), 0);
     const totalVolume = orders.reduce((sum, order) => sum + (parseFloat(order.Kg) || 0), 0);

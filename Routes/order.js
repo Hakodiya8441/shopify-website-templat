@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../Models/order"); // Ensure this path is correct
+const combine = require ("../Models/combinesheet")
 
 
 // GET all orders
 router.get("/orders", async (req, res) => {
     try {
         // Fetch all orders from the database
-        const orders = await Order.find();
+        const orders = await combine.find();
 
         // If no orders are found
         if (orders.length === 0) {
@@ -30,7 +31,7 @@ router.get("/:contact", async (req, res) => {
         console.log("Contact number:", contact);
 
         // Fetch all orders for the given contact
-        const orders = await Order.find({ Contact_Details: contact });
+        const orders = await combine.find({ Contact_Details: contact });
 
         if (orders.length === 0) {
             return res.status(404).json({ message: "No orders found for this contact number" });
